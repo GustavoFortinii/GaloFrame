@@ -1,57 +1,86 @@
-// ==================== GaloFrame - Editor JS ====================
+// ==================== GaloFrame - Editor JS (Multi-usuário) ====================
 
-let currentImage = null;
-let currentIndex = null;
+let currentImageId = null;
 
-// Carregar imagem ao abrir o editor
 document.addEventListener('DOMContentLoaded', () => {
     loadCurrentImage();
 });
 
-function loadCurrentImage() {
-    currentImage = localStorage.getItem('currentEditImage');
-    currentIndex = localStorage.getItem('currentEditIndex');
+async function loadCurrentImage() {
+    currentImageId = localStorage.getItem('currentEditId');
+    const token = localStorage.getItem('token');
+
+    if (!currentImageId) {
+        alert("Nenhuma imagem encontrada para edição!");
+        window.location.href = 'studio.html';
+        return;
+    }
+
+    if (!token) {
+        window.location.href = 'login.html';
+        return;
+    }
 
     const imgElement = document.getElementById('previewImage');
     
-    if (currentImage && imgElement) {
-        imgElement.src = currentImage;
-    } else {
-        alert("Nenhuma imagem encontrada para edição!");
-        window.location.href = 'studio.html';
+    try {
+        // Busca a imagem direto do back-end Node/Prisma passando o token de autenticação
+        const response = await fetch(`/api/memories/${currentImageId}`, {
+            headers: { 'Authorization': `Bearer ${token}` }
+        });
+
+        const data = await response.json();
+
+        if (response.ok && imgElement) {
+            imgElement.src = data.imageData;
+        } else {
+            alert(data.error || "Registro não encontrado!");
+            window.location.href = 'studio.html';
+        }
+    } catch (error) {
+        console.error("Erro ao carregar dados do servidor:", error);
     }
 }
 
-// Salvar e voltar para o studio
 function saveAndGoBack() {
-    if (currentImage && currentIndex !== null) {
-        let images = JSON.parse(localStorage.getItem('galoFrameStudioImages')) || [];
-        images[currentIndex] = currentImage;
-        localStorage.setItem('galoFrameStudioImages', JSON.stringify(images));
-    }
+    localStorage.removeItem('currentEditId');
     window.location.href = 'studio.html';
 }
 
-// Deletar imagem atual
-function deleteCurrentImage() {
-    if (confirm('Tem certeza que deseja excluir esta imagem?')) {
-        if (currentIndex !== null) {
-            let images = JSON.parse(localStorage.getItem('galoFrameStudioImages')) || [];
-            images.splice(currentIndex, 1);
-            localStorage.setItem('galoFrameStudioImages', JSON.stringify(images));
+async function deleteCurrentImage() {
+    if (!confirm('Tem certeza que deseja excluir esta imagem?')) return;
+
+    const token = localStorage.getItem('token');
+    
+    if (currentImageId && token) {
+        try {
+            // Dispara o DELETE para o back-end apagar no banco SQLite
+            const response = await fetch(`/api/memories/${currentImageId}`, {
+                method: 'DELETE',
+                headers: { 'Authorization': `Bearer ${token}` }
+            });
+
+            if (response.ok) {
+                localStorage.removeItem('currentEditId');
+                window.location.href = 'studio.html';
+            } else {
+                const data = await response.json();
+                alert(data.error || "Erro ao excluir o registro.");
+            }
+        } catch (error) {
+            console.error("Erro ao deletar:", error);
+            alert("Erro ao conectar com o servidor.");
         }
-        window.location.href = 'studio.html';
     }
 }
 
-// Postar no Feed (simulado por enquanto)
 function postImage() {
-    alert("✅ Imagem postada com sucesso no Feed do GaloFrame! 🐔\n\n(Em breve conectaremos com o backend)");
-    // Aqui no futuro você pode enviar para o servidor
-    window.location.href = 'home.html';
+    alert("✅ Imagem disponível no Feed Geral da Massa! 🐔");
+    localStorage.removeItem('currentEditId');
+    window.location.href = 'feed.html';
 }
 
-// Expor funções para o HTML
+// Expor funções para os atributos onclick legados do HTML
 window.saveAndGoBack = saveAndGoBack;
 window.deleteCurrentImage = deleteCurrentImage;
 window.postImage = postImage;

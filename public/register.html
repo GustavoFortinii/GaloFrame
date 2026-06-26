@@ -1,0 +1,156 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>GaloFrame - Cadastro</title>
+    <link rel="stylesheet" href="style.css">
+    <style>
+        body {
+            font-family: 'Segoe UI', sans-serif;
+            background: linear-gradient(135deg, #000000, #1a1a1a);
+            color: white;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            min-height: 100vh;
+            margin: 0;
+        }
+        .register-container {
+            background: rgba(255, 255, 255, 0.08);
+            padding: 40px 30px;
+            border-radius: 16px;
+            width: 100%;
+            max-width: 420px;
+            box-shadow: 0 8px 32px rgba(0, 0, 0, 0.6);
+            border: 1px solid rgba(255, 215, 0, 0.2);
+            text-align: center;
+        }
+        .logo {
+            font-size: 48px;
+            margin-bottom: 10px;
+        }
+        h1 {
+            color: #FFD700;
+            margin-bottom: 8px;
+        }
+        p {
+            color: #ccc;
+            margin-bottom: 30px;
+        }
+        input {
+            width: 100%;
+            padding: 14px;
+            margin: 10px 0;
+            background: rgba(255, 255, 255, 0.1);
+            border: 1px solid rgba(255, 215, 0, 0.3);
+            border-radius: 8px;
+            color: white;
+            font-size: 16px;
+        }
+        input:focus {
+            outline: none;
+            border-color: #FFD700;
+        }
+        button {
+            width: 100%;
+            padding: 14px;
+            background: #FFD700;
+            color: black;
+            font-weight: bold;
+            border: none;
+            border-radius: 8px;
+            font-size: 16px;
+            cursor: pointer;
+            margin-top: 10px;
+            transition: 0.3s;
+        }
+        button:hover {
+            background: #ffed4d;
+            transform: scale(1.03);
+        }
+        .login-link {
+            margin-top: 20px;
+            color: #aaa;
+        }
+        .login-link a {
+            color: #FFD700;
+            text-decoration: none;
+        }
+        .error { color: #ff6666; margin-top: 10px; }
+        .success { color: #66ff99; margin-top: 10px; }
+    </style>
+</head>
+<body>
+    <div class="register-container">
+        <div class="logo">🐔</div>
+        <h1>Cadastro GaloFrame</h1>
+        <p>Faça parte da maior torcida digital do Brasil!</p>
+
+        <form id="registerForm">
+            <input type="text" id="username" placeholder="Nome de usuário" required>
+            <input type="email" id="email" placeholder="E-mail" required>
+            <input type="password" id="password" placeholder="Senha" required>
+            <input type="password" id="confirmPassword" placeholder="Confirmar senha" required>
+
+            <button type="submit">Cadastrar</button>
+        </form>
+
+        <div class="error" id="errorMessage"></div>
+        <div class="success" id="successMessage"></div>
+
+        <div class="login-link">
+            Já tem conta? <a href="/login">Faça login aqui</a>
+        </div>
+    </div>
+
+    <script>
+        const form = document.getElementById('registerForm');
+        const errorMsg = document.getElementById('errorMessage');
+        const successMsg = document.getElementById('successMessage');
+
+        form.addEventListener('submit', async (e) => {
+            e.preventDefault();
+
+            const username = document.getElementById('username').value.trim();
+            const email = document.getElementById('email').value.trim();
+            const password = document.getElementById('password').value;
+            const confirmPassword = document.getElementById('confirmPassword').value;
+
+            errorMsg.textContent = '';
+            successMsg.textContent = '';
+
+            if (password !== confirmPassword) {
+                errorMsg.textContent = 'As senhas não coincidem!';
+                return;
+            }
+
+            if (password.length < 6) {
+                errorMsg.textContent = 'A senha deve ter pelo menos 6 caracteres!';
+                return;
+            }
+
+            try {
+                const response = await fetch('/api/auth/register', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ email, username, password })
+                });
+
+                const data = await response.json();
+
+                if (response.ok) {
+                    successMsg.textContent = 'Cadastro realizado com sucesso! Redirecionando...';
+                    setTimeout(() => {
+                        window.location.href = '/login';
+                    }, 2000);
+                } else {
+                    errorMsg.textContent = data.error || 'Erro ao realizar cadastro';
+                }
+            } catch (error) {
+                errorMsg.textContent = 'Erro de conexão com o servidor';
+            }
+        });
+    </script>
+</body>
+</html>

@@ -1,4 +1,3 @@
-// public/assets/scripts/db.js
 const db = new Dexie('GaloFrameDB');
 
 db.version(1).stores({
