@@ -3,7 +3,7 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>GaloFrame</title>
+  <title>GaloFrame - Login</title>
   <link rel="icon" href="assets/images/logo.png">
   <link rel="stylesheet" href="./assets/styles/login.css">
 </head>
@@ -21,31 +21,18 @@
     </p>
 
     <form id="loginForm">
-
       <div class="form-group">
-        <label for="email">E-mail ou Usuário</label>
-        <input
-          type="text"
-          id="email"
-          placeholder="seuemail@exemplo.com"
-          required
-        >
+        <input type="text" id="username" placeholder="Nome de usuário ou e-mail" required>
       </div>
 
       <div class="form-group">
-        <label for="password">Senha</label>
-        <input
-          type="password"
-          id="password"
-          placeholder="••••••••"
-          required
-        >
+        <input type="password" id="password" placeholder="Senha" required>
       </div>
 
-      <button type="submit" class="login-btn">
-        Entrar
-      </button>
+      <p id="errorMessage" class="error"></p>
+      <p id="successMessage" class="success"></p>
 
+      <button type="submit" class="login-btn">Entrar</button>
     </form>
 
     <div class="forgot">

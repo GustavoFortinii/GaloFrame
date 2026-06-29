@@ -100,7 +100,9 @@ body {
 .form-group input::placeholder {
   color: #888;
 }
-
+input{
+  width: 5px;
+}
 .form-group input:focus {
   outline: none;
 
