@@ -92,12 +92,68 @@
     </div>
 
     <script type="module">
-    import db from './db.js'; // Importa o banco unificado
+    const token = localStorage.getItem('token');
 
     async function carregarFeed() {
-        // ... seu código de carregar o feed usando o 'db' centralizado
+        const feedContainer = document.getElementById('feed');
+        const emptyFeed = document.getElementById('emptyFeed');
+
+        try {
+            const res = await fetch('/api/memories/feed', {
+                headers: {
+                    'Authorization': `Bearer ${token}`
+                }
+            });
+
+            if (!res.ok) throw new Error('Erro ao carregar feed');
+
+            const memories = await res.json();
+
+            feedContainer.innerHTML = '';
+
+            if (memories.length === 0) {
+                emptyFeed.style.display = 'block';
+                return;
+            }
+
+            emptyFeed.style.display = 'none';
+
+            memories.forEach(memory => {
+                const card = document.createElement('div');
+                card.className = 'memory-card';
+                card.innerHTML = `
+                    <img src="${memory.imageData}" alt="${memory.title}">
+                    <div class="memory-info">
+                        <div class="memory-meta">
+                            <strong>@${memory.user?.username || 'GaloFan'}</strong>
+                            <span>${new Date(memory.date).toLocaleDateString('pt-BR')}</span>
+                        </div>
+                        <h3 class="memory-title">${memory.title}</h3>
+                        <p class="memory-description">${memory.description}</p>
+                        ${memory.tags ? `<p><strong>Tags:</strong> ${memory.tags}</p>` : ''}
+                    </div>
+                `;
+                feedContainer.appendChild(card);
+            });
+
+        } catch (error) {
+            console.error(error);
+            feedContainer.innerHTML = `<p style="color:red; text-align:center;">Erro ao carregar o feed. Tente novamente.</p>`;
+        }
     }
+
     window.onload = carregarFeed;
+
+    // Função de filtro (busca)
+    window.filtrarFeed = function(termo) {
+        const cards = document.querySelectorAll('.memory-card');
+        termo = termo.toLowerCase();
+        
+        cards.forEach(card => {
+            const texto = card.textContent.toLowerCase();
+            card.style.display = texto.includes(termo) ? '' : 'none';
+        });
+    };
 </script>
 </body>
 </html>
