@@ -1,69 +1,172 @@
 <!DOCTYPE html>
-<html lang="pt">
+<html lang="pt-BR">
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <link rel="stylesheet" href="./assets/styles/studio.css">
-    <script src="https://unpkg.com/dexie@4.0.8/dist/dexie.min.js"></script>
     <link rel="icon" href="assets/images/logo.png">
-    <title>GaloFrame - Estúdio</title>
-   
+    <title>Studio - GaloFrame</title>
+    <style>
+        body {
+            font-family: 'Segoe UI', sans-serif;
+            background: linear-gradient(135deg, #0a0a0a, #1a1a1a);
+            color: #fff;
+            margin: 0;
+            padding: 20px;
+        }
+        .container {
+            max-width: 700px;
+            margin: 0 auto;
+        }
+        h1 {
+            color: #FFD700;
+            text-align: center;
+            margin-bottom: 30px;
+        }
+        form {
+            background: rgba(255,255,255,0.08);
+            padding: 30px;
+            border-radius: 16px;
+            border: 1px solid #FFD700;
+        }
+        label {
+            display: block;
+            margin: 15px 0 8px;
+            color: #FFD700;
+        }
+        input, textarea {
+            width: 100%;
+            padding: 12px;
+            background: #222;
+            border: 1px solid #555;
+            border-radius: 8px;
+            color: white;
+        }
+        input[type="file"] {
+            background: transparent;
+            padding: 8px 0;
+        }
+        button {
+            width: 100%;
+            padding: 14px;
+            background: #FFD700;
+            color: black;
+            border: none;
+            border-radius: 8px;
+            font-weight: bold;
+            margin-top: 20px;
+            cursor: pointer;
+        }
+        .back-btn {
+            margin-bottom: 20px;
+            padding: 10px 18px;
+            background: #333;
+            color: white;
+            border: none;
+            border-radius: 8px;
+        }
+        #preview {
+            max-width: 100%;
+            margin: 15px 0;
+            border-radius: 8px;
+            display: none;
+        }
+    </style>
 </head>
 <body>
+    <div class="container">
+        <button class="back-btn" onclick="window.location.href='/home'">← Voltar</button>
+        <h1>🎨 Studio GaloFrame</h1>
 
-    <header>
- 
-        <div class="nav">
-      <div class="logo" onclick="window.location.href='home.html'">
-        <span class="destaque">Galo</span>Frame <div class="logo-dot"></div>
-      </div>
-      
-      <input type="text" class="search-bar" placeholder="Buscar momentos alvinegros...">
+        <form id="memoryForm">
+            <label>Título do Momento</label>
+            <input type="text" id="title" required>
 
-      
-      <div class="main-nav">
-        <a href="home.html">
-          <div class="nav-item">
-            Início
-          </div>
-        </a>
-        <a href="feed.html">
-          <div class="nav-item">
-            Feed
-          </div>
-        </a>
-        <a href="studio.html">
-          <div class="nav-item">
-            Studio
-          </div>
-        </a>
-        <a href="perfil.html">
-        <div class="nav-item">
-          Perfil  
-        </div>
-       </a>
+            <label>Descrição</label>
+            <textarea id="description" rows="4" placeholder="Conte a história..."></textarea>
 
-      </div>
-    </header>
+            <label>Data</label>
+            <input type="date" id="date" required>
 
-    <div id="imageGrid" class="grid"></div>
+            <label>Tags (separadas por vírgula)</label>
+            <input type="text" id="tags" placeholder="galo, atletico, 2026">
 
-    <div class="empty" id="emptyMessage">
-        <p>Nenhuma imagem ainda.<br>Clique no + para adicionar</p>
+            <label>Foto do Momento</label>
+            <input type="file" id="imageInput" accept="image/*" required>
+            <img id="preview" alt="Pré-visualização">
+
+            <button type="submit">Publicar Momento</button>
+        </form>
     </div>
 
-    <!-- Botão flutuante -->
-    <div class="floating-upload" onclick="openUploadModal()">
-        <svg width="28" height="28" viewBox="0 0 24 24">
-            <path d="M12 5V19M5 12H19" stroke="white" stroke-width="3" stroke-linecap="round"/>
-        </svg>
-    </div>
+    <script>
+        const form = document.getElementById('memoryForm');
+        const imageInput = document.getElementById('imageInput');
+        const preview = document.getElementById('preview');
 
-    <!-- Input escondido -->
-    <input type="file" id="imageUpload" accept="image/*" style="display: none;">
+        // Preview da imagem
+        imageInput.addEventListener('change', function() {
+            const file = this.files[0];
+            if (file) {
+                const reader = new FileReader();
+                reader.onload = function(e) {
+                    preview.src = e.target.result;
+                    preview.style.display = 'block';
+                };
+                reader.readAsDataURL(file);
+            }
+        });
 
-    <script src="./assets/scripts/studio.js">
-        
+        form.addEventListener('submit', async (e) => {
+            e.preventDefault();
+
+            const token = localStorage.getItem('token');
+            if (!token) {
+                alert("Você precisa estar logado!");
+                window.location.href = '/login';
+                return;
+            }
+
+            const imageFile = imageInput.files[0];
+            if (!imageFile) {
+                alert("Selecione uma foto!");
+                return;
+            }
+
+            const reader = new FileReader();
+            reader.onload = async function(ev) {
+                const imageData = ev.target.result;
+
+                const data = {
+                    title: document.getElementById('title').value,
+                    description: document.getElementById('description').value,
+                    date: document.getElementById('date').value,
+                    tags: document.getElementById('tags').value,
+                    imageData: imageData
+                };
+
+                try {
+                    const res = await fetch('/api/memories', {
+                        method: 'POST',
+                        headers: {
+                            'Authorization': `Bearer ${token}`,
+                            'Content-Type': 'application/json'
+                        },
+                        body: JSON.stringify(data)
+                    });
+
+                    if (res.ok) {
+                        alert('Momento publicado com sucesso!');
+                        form.reset();
+                        preview.style.display = 'none';
+                    } else {
+                        alert('Erro ao publicar momento');
+                    }
+                } catch (error) {
+                    alert('Erro de conexão');
+                }
+            };
+            reader.readAsDataURL(imageFile);
+        });
     </script>
 </body>
 </html>

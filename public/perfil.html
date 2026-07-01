@@ -1,0 +1,311 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <link rel="icon" href="assets/images/logo.png">
+    <title>Meu Perfil - GaloFrame</title>
+    <style>
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+        body {
+            font-family: 'Segoe UI', sans-serif;
+            background: linear-gradient(135deg, #0a0a0a, #1a1a1a);
+            color: #fff;
+            min-height: 100vh;
+        }
+        .container {
+            max-width: 900px;
+            margin: 0 auto;
+            padding: 20px;
+        }
+        .profile-header {
+            background: rgba(255, 215, 0, 0.08);
+            padding: 40px 30px;
+            border-radius: 20px;
+            border: 1px solid #FFD700;
+            display: flex;
+            align-items: center;
+            gap: 30px;
+            flex-wrap: wrap;
+            justify-content: center;
+            margin-bottom: 40px;
+            text-align: center;
+        }
+        .avatar {
+            width: 180px;
+            height: 180px;
+            border-radius: 50%;
+            border: 6px solid #FFD700;
+            object-fit: cover;
+            box-shadow: 0 0 20px rgba(255, 215, 0, 0.4);
+        }
+        .user-info h1 {
+            font-size: 2.5em;
+            color: #FFD700;
+            margin-bottom: 5px;
+        }
+        .user-info p {
+            color: #ccc;
+            font-size: 1.1em;
+        }
+        .bio {
+            margin-top: 12px;
+            font-style: italic;
+            max-width: 600px;
+            color: #ddd;
+        }
+        .edit-btn {
+            margin-top: 20px;
+            padding: 12px 28px;
+            background: #FFD700;
+            color: black;
+            border: none;
+            border-radius: 50px;
+            cursor: pointer;
+            font-weight: bold;
+            font-size: 1em;
+            display: inline-flex;
+            align-items: center;
+            gap: 8px;
+        }
+        .back-btn {
+            margin-bottom: 20px;
+            padding: 10px 18px;
+            background: #333;
+            color: white;
+            border: none;
+            border-radius: 8px;
+            cursor: pointer;
+        }
+        .posts-section h2 {
+            margin-bottom: 20px;
+            color: #FFD700;
+        }
+        .posts-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
+            gap: 20px;
+        }
+        .post-card {
+            background: #1f1f1f;
+            border-radius: 12px;
+            overflow: hidden;
+            border: 1px solid rgba(255, 215, 0, 0.2);
+        }
+        .post-card img {
+            width: 100%;
+            height: 200px;
+            object-fit: cover;
+        }
+        .post-info {
+            padding: 15px;
+        }
+        .post-info h3 {
+            color: #FFD700;
+            margin-bottom: 8px;
+        }
+
+        /* Modal */
+        .modal {
+            display: none;
+            position: fixed;
+            top: 0; left: 0;
+            width: 100%; height: 100%;
+            background: rgba(0,0,0,0.85);
+            z-index: 1000;
+        }
+        .modal-content {
+            background: #1f1f1f;
+            margin: 8% auto;
+            padding: 30px;
+            width: 90%;
+            max-width: 500px;
+            border-radius: 16px;
+            border: 1px solid #FFD700;
+        }
+        .close {
+            float: right;
+            font-size: 28px;
+            cursor: pointer;
+            color: #aaa;
+        }
+        .close:hover { color: white; }
+        input, textarea {
+            width: 100%;
+            padding: 10px;
+            margin: 8px 0 15px;
+            background: #333;
+            border: 1px solid #555;
+            border-radius: 8px;
+            color: white;
+        }
+        .save-btn {
+            width: 100%;
+            padding: 12px;
+            background: #FFD700;
+            color: black;
+            border: none;
+            border-radius: 8px;
+            font-weight: bold;
+            cursor: pointer;
+            margin-top: 10px;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <button class="back-btn" onclick="window.location.href='/home'">← Voltar</button>
+
+        <div class="profile-header">
+            <img id="profileAvatar" 
+                 src="/assets/images/default-avatar.png" 
+                 alt="Foto de Perfil" 
+                 class="avatar"
+                 onerror="this.src='/assets/images/default-avatar.png'">
+
+            <div class="user-info">
+                <h1 id="username">Carregando...</h1>
+                <p id="email">email@exemplo.com</p>
+                <p class="bio" id="bio">Nenhuma bio cadastrada ainda.</p>
+                <button class="edit-btn" onclick="openEditModal()">✏️ Editar Perfil</button>
+            </div>
+        </div>
+
+        <div class="posts-section">
+            <h2>Meus Momentos</h2>
+            <div class="posts-grid" id="postsGrid"></div>
+        </div>
+    </div>
+
+    <!-- Modal -->
+    <div id="editModal" class="modal">
+        <div class="modal-content">
+            <span class="close" onclick="closeEditModal()">×</span>
+            <h2>Editar Perfil</h2>
+
+            <div style="text-align:center; margin:15px 0;">
+                <img id="modalAvatarPreview" 
+                     src="/assets/images/default-avatar.png" 
+                     style="width:120px;height:120px;border-radius:50%;object-fit:cover;border:3px solid #FFD700;"
+                     onerror="this.src='/assets/images/default-avatar.png'">
+                <br><br>
+                <input type="file" id="avatarInput" accept="image/*">
+            </div>
+
+            <label>Nome de usuário</label>
+            <input type="text" id="editUsername">
+
+            <label>E-mail</label>
+            <input type="email" id="editEmail">
+
+            <label>Bio</label>
+            <textarea id="editBio" rows="4"></textarea>
+
+            <button onclick="saveProfile()" class="save-btn">Salvar Alterações</button>
+        </div>
+    </div>
+
+    <script>
+        let selectedAvatarBase64 = null;
+
+        async function loadProfile() {
+            const token = localStorage.getItem('token');
+            if (!token) {
+                window.location.href = '/login';
+                return;
+            }
+
+            try {
+                const res = await fetch('/api/me', {
+                    headers: { 'Authorization': `Bearer ${token}` }
+                });
+
+                if (!res.ok) throw new Error('Falha ao carregar');
+
+                const data = await res.json();
+                const user = data.user;
+
+                document.getElementById('username').textContent = user.username || "Atleticano";
+                document.getElementById('email').textContent = user.email || "";
+                document.getElementById('bio').textContent = user.bio || "Nenhuma bio cadastrada ainda.";
+                document.getElementById('profileAvatar').src = user.avatarData || "/assets/images/default-avatar.png";
+
+            } catch (error) {
+                console.error(error);
+                alert("Erro ao carregar perfil.");
+            }
+        }
+
+        function openEditModal() {
+            document.getElementById('editUsername').value = document.getElementById('username').textContent;
+            document.getElementById('editEmail').value = document.getElementById('email').textContent;
+            document.getElementById('editBio').value = document.getElementById('bio').textContent === "Nenhuma bio cadastrada ainda." ? "" : document.getElementById('bio').textContent;
+            
+            document.getElementById('modalAvatarPreview').src = document.getElementById('profileAvatar').src;
+            selectedAvatarBase64 = null;
+
+            document.getElementById('editModal').style.display = 'block';
+        }
+
+        function closeEditModal() {
+            document.getElementById('editModal').style.display = 'none';
+        }
+
+        document.getElementById('avatarInput').addEventListener('change', function(e) {
+            const file = e.target.files[0];
+            if (!file) return;
+            const reader = new FileReader();
+            reader.onload = function(ev) {
+                selectedAvatarBase64 = ev.target.result;
+                document.getElementById('modalAvatarPreview').src = selectedAvatarBase64;
+            };
+            reader.readAsDataURL(file);
+        });
+
+        async function saveProfile() {
+            const token = localStorage.getItem('token');
+            const newUsername = document.getElementById('editUsername').value.trim();
+            const newEmail = document.getElementById('editEmail').value.trim();
+            const newBio = document.getElementById('editBio').value.trim();
+
+            if (!newUsername || !newEmail) {
+                alert("Nome de usuário e E-mail são obrigatórios!");
+                return;
+            }
+
+            try {
+                const res = await fetch('/api/me', {
+                    method: 'PATCH',
+                    headers: {
+                        'Authorization': `Bearer ${token}`,
+                        'Content-Type': 'application/json'
+                    },
+                    body: JSON.stringify({
+                        username: newUsername,
+                        email: newEmail,
+                        bio: newBio,
+                        avatarData: selectedAvatarBase64
+                    })
+                });
+
+                if (res.ok) {
+                    alert('Perfil atualizado com sucesso!');
+                    closeEditModal();
+                    loadProfile();
+                    selectedAvatarBase64 = null;
+                } else {
+                    alert('Erro ao salvar alterações');
+                }
+            } catch (error) {
+                alert('Erro de conexão');
+            }
+        }
+
+        window.onclick = function(event) {
+            if (event.target === document.getElementById('editModal')) closeEditModal();
+        };
+
+        window.onload = loadProfile;
+    </script>
+</body>
+</html>
